@@ -1,4 +1,5 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import type { PieLabelRenderProps } from 'recharts'
 
 import type { StatusSlice } from '@/features/contract-agent/utils/data-calculations'
 import { ChartContainer } from './chart-container'
@@ -8,9 +9,24 @@ interface Props {
 }
 
 const RADIAN = Math.PI / 180
-function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
-  cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number
-}) {
+function renderCustomLabel({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}: PieLabelRenderProps) {
+  if (
+    cx === undefined ||
+    cy === undefined ||
+    midAngle === undefined ||
+    innerRadius === undefined ||
+    outerRadius === undefined ||
+    percent === undefined
+  ) {
+    return null
+  }
   if (percent < 0.05) return null
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5
   const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -44,10 +60,14 @@ export function StatusDistributionChart({ data }: Props) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `${value} (${Math.round((value / total) * 100)}%)`,
-              name,
-            ]}
+            formatter={(value, name) => {
+              const numericValue =
+                typeof value === 'number' ? value : Number(value ?? 0)
+              return [
+                `${numericValue} (${Math.round((numericValue / total) * 100)}%)`,
+                String(name),
+              ]
+            }}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Legend

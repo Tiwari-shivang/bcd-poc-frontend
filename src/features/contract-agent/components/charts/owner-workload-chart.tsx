@@ -38,7 +38,14 @@ export function OwnerWorkloadChart({ data }: Props) {
           <Tooltip
             cursor={{ fill: '#F3F4F6' }}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
-            formatter={(v: number) => [`${v} contract${v !== 1 ? 's' : ''}`, 'Contracts']}
+            formatter={(value) => {
+              const numericValue =
+                typeof value === 'number' ? value : Number(value ?? 0)
+              return [
+                `${numericValue} contract${numericValue !== 1 ? 's' : ''}`,
+                'Contracts',
+              ]
+            }}
           />
           <Bar dataKey="contracts" radius={[0, 4, 4, 0]}>
             {data.map((_, i) => (

@@ -28,10 +28,14 @@ export function ClientConcentrationChart({ data }: Props) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `${value} (${Math.round((value / total) * 100)}%)`,
-              name,
-            ]}
+            formatter={(value, name) => {
+              const numericValue =
+                typeof value === 'number' ? value : Number(value ?? 0)
+              return [
+                `${numericValue} (${Math.round((numericValue / total) * 100)}%)`,
+                String(name),
+              ]
+            }}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Legend

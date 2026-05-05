@@ -51,14 +51,14 @@ export function OipHeader({
             <div className="text-[12px] font-semibold leading-tight text-white/90">
               Welcome,
             </div>
-            <div className="text-[13px] font-semibold leading-tight">Karan</div>
+            <div className="text-[13px] font-semibold leading-tight">Shivang</div>
           </div>
           <div
             className="flex size-9 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold"
             aria-label="User profile"
-            title="Karan"
+            title="Shivang"
           >
-            K
+            SH
           </div>
         </div>
       </div>
