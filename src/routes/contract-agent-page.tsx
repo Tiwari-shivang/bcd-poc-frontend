@@ -5,6 +5,7 @@ import {
   BadgeAlert,
   Database,
   LineChart as LineChartIcon,
+  Mic,
   Sparkles,
 } from 'lucide-react'
 import {
@@ -1007,7 +1008,7 @@ export default function ContractAgentPage() {
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.id)}
               className={[
-                'px-6 py-3 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06B6D4] focus-visible:ring-offset-1',
+                'px-6 py-0 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06B6D4] focus-visible:ring-offset-1',
                 isActive
                   ? 'border-b-2 border-[#06B6D4] text-[#1F2937]'
                   : 'border-b-2 border-transparent text-[#6B7280] hover:text-[#374151]',
@@ -1022,16 +1023,16 @@ export default function ContractAgentPage() {
       {/* Chat tab */}
       {activeTab === 'chat' && (
         <div
-          className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(180deg,#F5FBFC_0%,#FCFEFE_42%,#F8FAFC_100%)]"
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
           role="tabpanel"
           aria-label="Chat"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top_left,_rgba(8,145,178,0.16),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(15,118,110,0.10),_transparent_28%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-64" />
           {/* Scrollable message history */}
-          <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-5 [scrollbar-width:none] [-ms-overflow-style:none] sm:px-5 lg:px-6">
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-5 pb-28 [scrollbar-width:none] [-ms-overflow-style:none] sm:px-5 lg:px-6">
             <div className="mx-auto w-full max-w-6xl">
               {messages.length === 0 && !isLoading ? (
-                <div className="flex min-h-[360px] flex-col items-center justify-center gap-6 rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,251,252,0.92))] px-6 py-10 text-center shadow-[0_24px_60px_-32px_rgba(15,23,42,0.26)]">
+                <div className="flex min-h-[360px] flex-col items-center justify-center gap-6 rounded-[28px] px-6 py-10 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#0F766E] via-[#0891B2] to-[#155E75] text-white shadow-lg shadow-cyan-200/40">
                     <BotIcon size={26} />
                   </div>
@@ -1141,10 +1142,18 @@ export default function ContractAgentPage() {
           </div>
 
           {/* Composer */}
-          <div className="relative shrink-0 border-t border-[#E2E8F0] bg-white/88 px-3 pb-4 pt-3 backdrop-blur-md sm:px-5 lg:px-6">
-            <div className="mx-auto w-full max-w-6xl">
-              <div className="rounded-[26px] border border-[#D8E4EA] bg-white/96 p-2.5 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.24)] transition-all duration-150 focus-within:border-[#0891B2] focus-within:ring-1 focus-within:ring-[#0891B2]/30">
-                <div className="flex items-end gap-2">
+          <div className="sticky bottom-0 z-10 shrink-0 border-t border-[#E2E8F0] py-2 backdrop-blur-md">
+            {/* <div className="mx-auto w-full max-w-6xl">
+              <div className="mx-auto w-full max-w-full lg:max-w-[60%]">
+                <div className="rounded-[28px] border border-[#D6E3E8] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,251,252,0.96))] p-2 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.28)] transition-all duration-150 focus-within:border-[#0891B2] focus-within:ring-1 focus-within:ring-[#0891B2]/30">
+                <div className="flex items-end gap-2 rounded-[24px] bg-white/90 px-2 py-1.5">
+                  <button
+                    type="button"
+                    aria-label="Use microphone"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#D8E4EA] bg-[#F8FBFC] text-[#5B7180] transition-all hover:border-[#0891B2] hover:text-[#0E7490]"
+                  >
+                    <Mic className="h-4.5 w-4.5" />
+                  </button>
                   <textarea
                     ref={textareaRef}
                     value={input}
@@ -1153,7 +1162,7 @@ export default function ContractAgentPage() {
                     placeholder="Ask about agreements, ownership, implemented markets, solutions, or travel volume…"
                     rows={1}
                     disabled={isLoading}
-                    className="min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm leading-6 text-[#0F172A] placeholder-[#94A3B8] focus:outline-none disabled:opacity-60"
+                    className="min-h-[44px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-6 text-[#0F172A] placeholder-[#94A3B8] focus:outline-none disabled:opacity-60"
                     style={{ maxHeight: '120px' }}
                   />
                   <button
@@ -1169,10 +1178,42 @@ export default function ContractAgentPage() {
                     )}
                   </button>
                 </div>
+                </div>
               </div>
-              <p className="mt-1.5 text-center text-[11px] text-[#9CA3AF]">
-                Press Enter to send · Shift+Enter for new line
-              </p>
+            </div> */}
+            <div className="flex items-center justify-center px-3 sm:px-5 lg:px-6">
+              <div className="flex h-[40px] w-[65%] items-center gap-2 rounded-[15px] border border-[#CBD5E1] px-2 transition-colors duration-150 focus-within:border-[#0891B2] focus-within:ring-1 focus-within:ring-[#0891B2]/20">
+                <button
+                  type="button"
+                  aria-label="Use microphone"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] text-[#64748B] transition-colors hover:bg-[#F0F9FF] hover:text-[#0E7490]"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+              placeholder='Ask about agreements, ownership, implemented markets, solutions, or travel volume…'
+                  rows={1}
+                  className='h-[40px] min-h-[40px] flex-1 resize-none bg-transparent px-1 py-[0.5rem] text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none disabled:opacity-60'
+                  disabled={isLoading}
+                  style={{ maxHeight: '120px' }}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!input.trim() || isLoading}
+                  aria-label="Send message"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#0F766E] via-[#0891B2] to-[#155E75] text-white transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:bg-[#BAE6FD]"
+                >
+                  {isLoading ? (
+                    <span className="text-xs font-medium">...</span>
+                  ) : (
+                    <SendIcon />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
