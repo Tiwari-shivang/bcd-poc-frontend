@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
-  BarChart3,
   BadgeAlert,
   Database,
-  LayoutGrid,
   LineChart as LineChartIcon,
-  PieChart as PieChartIcon,
   Sparkles,
 } from 'lucide-react'
 import {
@@ -441,39 +438,6 @@ function InsightsLoadingState() {
   )
 }
 
-function SummaryStatCard({
-  label,
-  value,
-  note,
-  tone,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  note: string
-  tone: 'cyan' | 'amber' | 'slate'
-  icon: typeof Database
-}) {
-  const tones = {
-    cyan: 'border-cyan-100 bg-cyan-50/80 text-cyan-900',
-    amber: 'border-amber-100 bg-amber-50/80 text-amber-900',
-    slate: 'border-slate-200 bg-slate-50/90 text-slate-900',
-  }
-
-  return (
-    <div className={`rounded-3xl border p-4 ${tones[tone]}`}>
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em]">
-          {label}
-        </span>
-        <Icon className="h-4 w-4 opacity-70" />
-      </div>
-      <div className="text-3xl font-semibold tracking-[-0.04em]">{value}</div>
-      <p className="mt-1 text-xs opacity-80">{note}</p>
-    </div>
-  )
-}
-
 function ChartsExperience() {
   const salesForceChartsQuery = useQuery({
     queryKey: ['insights', 'sales-force', 'charts'],
@@ -506,16 +470,6 @@ function ChartsExperience() {
     (count, item) => count + item.charts.length,
     0
   )
-  const totalDataPoints = sourceData.reduce(
-    (count, item) =>
-      count + item.charts.reduce((sum, chart) => sum + chart.normalizedData.length, 0),
-    0
-  )
-  const chartTypes = Array.from(
-    new Set(
-      sourceData.flatMap((item) => item.charts.map((chart) => chart.chart_type))
-    )
-  ).length
 
   if (isLoading) {
     return <ChartsLoadingState />
@@ -569,12 +523,11 @@ function ChartsExperience() {
         ) : null}
 
         <section className="grid gap-5 xl:grid-cols-2">
-          {sourceData.map(({ source, charts, total }) => (
+          {sourceData.map(({ source, charts }) => (
             <SourceChartsColumn
               key={`charts-${source.id}`}
               source={source}
               charts={charts}
-              total={total}
             />
           ))}
         </section>
@@ -622,11 +575,9 @@ function ChartsLoadingState() {
 function SourceChartsColumn({
   source,
   charts,
-  total,
 }: {
   source: InsightSourceConfig
   charts: DisplayChart[]
-  total: number
 }) {
   const Icon = source.icon
 
@@ -1071,34 +1022,36 @@ export default function ContractAgentPage() {
       {/* Chat tab */}
       {activeTab === 'chat' && (
         <div
-          className="flex min-h-0 flex-1 flex-col bg-[var(--oip-content-bg)]"
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(180deg,#F5FBFC_0%,#FCFEFE_42%,#F8FAFC_100%)]"
           role="tabpanel"
           aria-label="Chat"
         >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top_left,_rgba(8,145,178,0.16),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(15,118,110,0.10),_transparent_28%)]" />
           {/* Scrollable message history */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5 [scrollbar-width:none] [-ms-overflow-style:none]">
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-5 [scrollbar-width:none] [-ms-overflow-style:none] sm:px-5 lg:px-6">
             <div className="mx-auto w-full max-w-6xl">
               {messages.length === 0 && !isLoading ? (
-                <div className="flex min-h-[300px] flex-col items-center justify-center gap-5 rounded-2xl border border-[#E5E7EB] bg-white/70 px-6 py-8 text-center shadow-sm">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#06B6D4] to-[#0891B2] text-white shadow-lg shadow-cyan-200/50">
+                <div className="flex min-h-[360px] flex-col items-center justify-center gap-6 rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,251,252,0.92))] px-6 py-10 text-center shadow-[0_24px_60px_-32px_rgba(15,23,42,0.26)]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#0F766E] via-[#0891B2] to-[#155E75] text-white shadow-lg shadow-cyan-200/40">
                     <BotIcon size={26} />
                   </div>
-                  <div className="space-y-1.5">
-                    <p className="text-base font-semibold text-[#1F2937]">
-                      Get started by exploring insights
+                  <div className="space-y-2">
+                    <p className="text-lg font-semibold tracking-[-0.03em] text-[#0F172A]">
+                      Ask the contract agent like a strategist
                     </p>
-                    <p className="mx-auto max-w-[560px] text-sm leading-relaxed text-[#6B7280]">
-                      Ask about agreements, ownership, implemented markets,
-                      solutions, or travel volume.
+                    <p className="mx-auto max-w-[620px] text-sm leading-7 text-[#64748B] sm:text-[15px]">
+                      Explore travel contracts, renewal risk, implemented
+                      markets, ownership coverage, solution footprint, and spend
+                      signals from one conversational workspace.
                     </p>
                   </div>
-                  <div className="mt-1 flex w-full max-w-3xl flex-wrap items-center justify-center gap-2">
+                  <div className="mt-2 flex w-full max-w-3xl flex-wrap items-center justify-center gap-2.5">
                     {STARTER_PROMPTS.map((prompt) => (
                       <button
                         key={prompt}
                         type="button"
                         onClick={() => applyStarterPrompt(prompt)}
-                        className="rounded-full border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs text-[#374151] transition-colors hover:border-[#06B6D4] hover:text-[#0E7490]"
+                        className="rounded-full border border-[#D8E4EA] bg-white/90 px-4 py-2 text-xs font-medium text-[#334155] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#0891B2] hover:text-[#0E7490] hover:shadow-md"
                       >
                         {prompt}
                       </button>
@@ -1106,9 +1059,9 @@ export default function ContractAgentPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
                   <div className="flex justify-center">
-                    <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-[11px] font-medium text-[#9CA3AF] shadow-sm">
+                    <span className="rounded-full border border-[#D8E4EA] bg-white/90 px-3.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#94A3B8] shadow-sm">
                       Today
                     </span>
                   </div>
@@ -1125,31 +1078,38 @@ export default function ContractAgentPage() {
                       >
                         <div
                           className={[
-                            'flex w-full max-w-[65%] items-end gap-2',
-                            isUser ? 'flex-row-reverse' : 'flex-row',
+                            'flex w-full items-start gap-3',
+                            isUser
+                              ? 'max-w-[78%] flex-row-reverse lg:max-w-[64%]'
+                              : 'max-w-[90%] flex-row',
                           ].join(' ')}
                         >
                           {!isUser && (
-                            <div className="mb-5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#06B6D4] to-[#0891B2] text-white shadow-sm">
-                              <BotIcon size={13} />
+                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-[linear-gradient(135deg,rgba(15,118,110,0.10),rgba(8,145,178,0.14))] text-[#0F766E]">
+                              <BotIcon size={15} />
                             </div>
                           )}
 
                           <div
                             className={[
-                              'flex min-w-0 flex-1 flex-col gap-1',
+                              'flex min-w-0 flex-1 flex-col gap-2',
                               isUser ? 'items-end' : 'items-start',
                             ].join(' ')}
                           >
+                            {!isUser && (
+                              <span className="pl-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#94A3B8]">
+                                Contract agent
+                              </span>
+                            )}
                             {msg.isHtml ? (
-                              <HtmlMessage html={msg.text} />
+                              <HtmlMessage html={msg.text} isUser={isUser} />
                             ) : (
                               <div
                                 className={[
-                                  'w-fit max-w-full rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+                                  'w-fit max-w-full text-sm leading-7',
                                   isUser
-                                    ? 'rounded-br-sm bg-[#06B6D4] text-white shadow-sm shadow-cyan-200/50'
-                                    : 'rounded-bl-sm border border-[#E5E7EB] bg-white text-[#1F2937]',
+                                    ? 'rounded-[24px] rounded-tr-md border border-[#CDECF3] bg-white px-5 py-4 text-[#0F172A] shadow-[0_18px_38px_-24px_rgba(14,116,144,0.32)]'
+                                    : 'px-1 py-0.5 text-[#334155]',
                                 ].join(' ')}
                               >
                                 {msg.text}
@@ -1157,8 +1117,8 @@ export default function ContractAgentPage() {
                             )}
                             <span
                               className={[
-                                'text-[11px] text-[#9CA3AF]',
-                                isUser ? 'pr-1' : 'pl-1',
+                                'text-[11px] text-[#94A3B8]',
+                                isUser ? 'pr-2' : 'pl-1',
                               ].join(' ')}
                             >
                               {formatTime(msg.at)}
@@ -1181,9 +1141,9 @@ export default function ContractAgentPage() {
           </div>
 
           {/* Composer */}
-          <div className="shrink-0 border-t border-[#E5E7EB] bg-white/90 px-3 pb-4 pt-3 backdrop-blur">
+          <div className="relative shrink-0 border-t border-[#E2E8F0] bg-white/88 px-3 pb-4 pt-3 backdrop-blur-md sm:px-5 lg:px-6">
             <div className="mx-auto w-full max-w-6xl">
-              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-[0_6px_18px_-10px_rgba(0,0,0,0.22)] transition-all duration-150 focus-within:border-[#06B6D4] focus-within:ring-1 focus-within:ring-[#06B6D4]/50">
+              <div className="rounded-[26px] border border-[#D8E4EA] bg-white/96 p-2.5 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.24)] transition-all duration-150 focus-within:border-[#0891B2] focus-within:ring-1 focus-within:ring-[#0891B2]/30">
                 <div className="flex items-end gap-2">
                   <textarea
                     ref={textareaRef}
@@ -1193,14 +1153,14 @@ export default function ContractAgentPage() {
                     placeholder="Ask about agreements, ownership, implemented markets, solutions, or travel volume…"
                     rows={1}
                     disabled={isLoading}
-                    className="min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-[#1F2937] placeholder-[#9CA3AF] focus:outline-none disabled:opacity-60"
+                    className="min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm leading-6 text-[#0F172A] placeholder-[#94A3B8] focus:outline-none disabled:opacity-60"
                     style={{ maxHeight: '120px' }}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || isLoading}
                     aria-label="Send message"
-                    className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl bg-[#06B6D4] px-3 text-white shadow-sm transition-all hover:bg-[#0891B2] hover:shadow-md disabled:cursor-not-allowed disabled:bg-[#BAE6FD]"
+                    className="flex h-10 min-w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F766E] via-[#0891B2] to-[#155E75] px-3 text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:bg-[#BAE6FD]"
                   >
                     {isLoading ? (
                       <span className="text-xs font-medium">...</span>
@@ -1245,13 +1205,16 @@ export default function ContractAgentPage() {
 function TypingIndicator({ phrase }: { phrase: string }) {
   return (
     <div className="flex w-full justify-start">
-      <div className="flex w-full max-w-[65%] items-end gap-2">
-        <div className="mb-5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#06B6D4] to-[#0891B2] text-white shadow-sm">
-          <BotIcon size={13} />
+      <div className="flex w-full max-w-[90%] items-start gap-3">
+        <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-[linear-gradient(135deg,rgba(15,118,110,0.10),rgba(8,145,178,0.14))] text-[#0F766E]">
+          <BotIcon size={15} />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1 items-start">
-          <div className="flex w-fit items-center gap-2 rounded-2xl rounded-bl-sm border border-[#E5E7EB] bg-white px-4 py-2.5">
-            <span className="text-sm text-[#6B7280]">{phrase}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-2 items-start">
+          <span className="pl-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#94A3B8]">
+            Contract agent
+          </span>
+          <div className="flex w-fit items-center gap-2 px-1 py-0.5">
+            <span className="text-sm text-[#64748B]">{phrase}</span>
             <span className="flex shrink-0 items-center gap-[3px]">
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#9CA3AF] [animation-delay:0ms]" />
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#9CA3AF] [animation-delay:150ms]" />
@@ -1312,7 +1275,13 @@ function SendIcon() {
 }
 
 /* ── HTML response renderer via Shadow DOM ── */
-function HtmlMessage({ html }: { html: string }) {
+function HtmlMessage({
+  html,
+  isUser = false,
+}: {
+  html: string
+  isUser?: boolean
+}) {
   const hostRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -1333,7 +1302,12 @@ function HtmlMessage({ html }: { html: string }) {
   return (
     <div
       ref={hostRef}
-      className="w-full overflow-auto rounded-xl border border-[#E5E7EB] bg-white shadow-sm"
+      className={[
+        'w-full overflow-auto',
+        isUser
+          ? 'rounded-[24px] border border-[#CDECF3] bg-white shadow-[0_18px_38px_-24px_rgba(14,116,144,0.32)]'
+          : 'bg-transparent',
+      ].join(' ')}
       style={{ maxHeight: '480px' }}
     />
   )
