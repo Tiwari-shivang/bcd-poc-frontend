@@ -53,6 +53,32 @@ export type InsightChartsResponse = {
   charts: InsightChartItem[]
 }
 
+export type ChatReplyType = 'card' | 'table' | 'paragraph'
+
+export type ChatReplyHeaderItem = {
+  key: string
+  value: string
+}
+
+export type ChatReplyPayload = {
+  heading?: string
+  subHeading?: string
+  follow_up?: string
+  type: ChatReplyType
+  header?: string[]
+  body?: string[][]
+  headers?: ChatReplyHeaderItem[]
+  paragraph?: string
+  content?: string
+}
+
+export type ChatApiResponse = {
+  response: ChatReplyPayload
+  needs_database_choice: boolean
+  resolved_data_source: string | null
+  error: string | null
+}
+
 function getApiBase(): string {
   const env = import.meta.env.VITE_API_BASE_URL
   if (env !== undefined && env !== '') {
@@ -70,8 +96,13 @@ async function parseJson<T>(res: Response): Promise<T> {
   if (!text) {
     return undefined as T
   }
-  if (text.trimStart().startsWith('<!doctype') || text.trimStart().startsWith('<html')) {
-    throw new Error('Expected JSON but received HTML. Check the API route or proxy configuration.')
+  if (
+    text.trimStart().startsWith('<!doctype') ||
+    text.trimStart().startsWith('<html')
+  ) {
+    throw new Error(
+      'Expected JSON but received HTML. Check the API route or proxy configuration.'
+    )
   }
   return JSON.parse(text) as T
 }
@@ -149,14 +180,7 @@ export async function postQuery(body: QueryRequest): Promise<AgentResponse> {
   return data as AgentResponse
 }
 
-function isHtmlString(s: string): boolean {
-  const t = s.trimStart().toLowerCase()
-  return t.startsWith('<!') || t.startsWith('<html') || t.startsWith('<table')
-}
-
-export async function postChatMessage(
-  message: string,
-): Promise<{ response: string; isHtml: boolean }> {
+export async function postChatMessage(message: string): Promise<ChatApiResponse> {
   const res = await fetch('/agent/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -165,20 +189,9 @@ export async function postChatMessage(
   if (!res.ok) {
     throw new Error(`Request failed (${res.status})`)
   }
-  const contentType = res.headers.get('content-type') ?? ''
-  const text = await res.text()
-
-  // Raw HTML response
-  if (contentType.includes('text/html') || isHtmlString(text)) {
-    return { response: text, isHtml: true }
+  const data = await parseJson<ChatApiResponse>(res)
+  if (data.error) {
+    throw new Error(data.error)
   }
-
-  // JSON-wrapped response — also check if the value itself is HTML
-  try {
-    const json = JSON.parse(text) as { response: string }
-    const responseText = json.response ?? text
-    return { response: responseText, isHtml: isHtmlString(responseText) }
-  } catch {
-    return { response: text, isHtml: false }
-  }
+  return data
 }

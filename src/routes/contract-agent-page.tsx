@@ -46,6 +46,7 @@ import {
   fetchSalesForceCharts,
   fetchSalesForceInsights,
   postChatMessage,
+  type ChatReplyPayload,
   type InsightChartItem,
   type InsightChartType,
   type InsightItem,
@@ -54,13 +55,21 @@ import {
 
 type ActiveTab = 'chat' | 'insights' | 'charts'
 
-type ChatMessage = {
+type UserChatMessage = {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user'
   text: string
-  isHtml?: boolean
   at: number
 }
+
+type AssistantChatMessage = {
+  id: string
+  role: 'assistant'
+  payload: ChatReplyPayload
+  at: number
+}
+
+type ChatMessage = UserChatMessage | AssistantChatMessage
 
 const TABS: { id: ActiveTab; label: string }[] = [
   { id: 'chat', label: 'Chat' },
@@ -168,6 +177,16 @@ function formatCellValue(value: unknown): string {
   }
 
   return text
+}
+
+function getParagraphContent(payload: ChatReplyPayload): string {
+  if (typeof payload.paragraph === 'string' && payload.paragraph.trim() !== '') {
+    return payload.paragraph
+  }
+  if (typeof payload.content === 'string' && payload.content.trim() !== '') {
+    return payload.content
+  }
+  return ''
 }
 
 function normalizeChartValue(value: unknown): string | number {
@@ -941,8 +960,7 @@ export default function ContractAgentPage() {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: data.response,
-          isHtml: data.isHtml,
+          payload: data.response,
           at: Date.now(),
         },
       ])
@@ -952,10 +970,15 @@ export default function ContractAgentPage() {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text:
-            err instanceof Error
-              ? err.message
-              : 'Something went wrong. Please try again.',
+          payload: {
+            type: 'paragraph',
+            heading: 'Request issue',
+            subHeading: 'The contract agent could not complete this request.',
+            paragraph:
+              err instanceof Error
+                ? err.message
+                : 'Something went wrong. Please try again.',
+          },
           at: Date.now(),
         },
       ])
@@ -1102,19 +1125,17 @@ export default function ContractAgentPage() {
                                 Contract agent
                               </span>
                             )}
-                            {msg.isHtml ? (
-                              <HtmlMessage html={msg.text} isUser={isUser} />
-                            ) : (
+                            {isUser ? (
                               <div
                                 className={[
                                   'w-fit max-w-full text-sm leading-7',
-                                  isUser
-                                    ? 'rounded-[24px] rounded-tr-md border border-[#CDECF3] bg-white px-5 py-4 text-[#0F172A] shadow-[0_18px_38px_-24px_rgba(14,116,144,0.32)]'
-                                    : 'px-1 py-0.5 text-[#334155]',
+                                  'rounded-[24px] rounded-tr-md border bg-[#0891B2] px-5 py-2 text-white shadow-[0_18px_38px_-24px_rgba(14,116,144,0.32)]',
                                 ].join(' ')}
                               >
                                 {msg.text}
                               </div>
+                            ) : (
+                              <AssistantMessage payload={msg.payload} />
                             )}
                             <span
                               className={[
@@ -1316,40 +1337,99 @@ function SendIcon() {
 }
 
 /* ── HTML response renderer via Shadow DOM ── */
-function HtmlMessage({
-  html,
-  isUser = false,
-}: {
-  html: string
-  isUser?: boolean
-}) {
-  const hostRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const host = hostRef.current
-    if (!host || !html) return
-
-    const styleBlocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
-      .map((m) => `<style>${m[1]}</style>`)
-      .join('\n')
-
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
-    const bodyContent = bodyMatch ? bodyMatch[1] : html
-
-    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' })
-    shadow.innerHTML = `${styleBlocks}\n${bodyContent}`
-  }, [html])
+function AssistantMessage({ payload }: { payload: ChatReplyPayload }) {
+  const paragraph = getParagraphContent(payload)
 
   return (
-    <div
-      ref={hostRef}
-      className={[
-        'w-full overflow-auto',
-        isUser
-          ? 'rounded-[24px] border border-[#CDECF3] bg-white shadow-[0_18px_38px_-24px_rgba(14,116,144,0.32)]'
-          : 'bg-transparent',
-      ].join(' ')}
-      style={{ maxHeight: '480px' }}
-    />
+    <div className="w-full max-w-full space-y-4 px-1 py-0.5 text-[#334155]">
+      {payload.heading ? (
+        <div className="space-y-1.5">
+          <h3 className="text-[1.05rem] font-semibold leading-6 tracking-[-0.02em] text-[#0F172A]">
+            {payload.heading}
+          </h3>
+          {payload.subHeading ? (
+            <p className="text-sm leading-7 text-[#64748B]">
+              {payload.subHeading}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {payload.type === 'table' ? (
+        <AssistantTable payload={payload} />
+      ) : payload.type === 'card' ? (
+        <AssistantCard payload={payload} />
+      ) : (
+        <AssistantParagraph text={paragraph} />
+      )}
+
+      {payload.follow_up ? (
+        <p className="text-sm leading-7 text-[#0E7490]">{payload.follow_up}</p>
+      ) : null}
+    </div>
+  )
+}
+
+function AssistantParagraph({ text }: { text: string }) {
+  return <p className="text-sm leading-7 text-[#334155]">{text}</p>
+}
+
+function AssistantCard({ payload }: { payload: ChatReplyPayload }) {
+  const items = payload.headers ?? []
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {items.map((item) => (
+        <div
+          key={`${item.key}-${item.value}`}
+          className="rounded-[20px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-4 py-3"
+        >
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94A3B8]">
+            {item.key}
+          </div>
+          <div className="mt-1 text-sm leading-6 text-[#0F172A]">
+            {item.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function AssistantTable({ payload }: { payload: ChatReplyPayload }) {
+  const header = payload.header ?? []
+  const body = payload.body ?? []
+
+  return (
+    <div className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white">
+      <Table>
+        <TableHeader className="bg-[#F8FAFC]">
+          <TableRow className="hover:bg-[#F8FAFC]">
+            {header.map((item) => (
+              <TableHead
+                key={item}
+                className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#64748B]"
+              >
+                {item}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {body.map((row, rowIndex) => (
+            <TableRow key={`row-${rowIndex}`}>
+              {row.map((cell, cellIndex) => (
+                <TableCell
+                  key={`cell-${rowIndex}-${cellIndex}`}
+                  className="px-4 py-3 text-sm text-[#1E293B]"
+                >
+                  {cell}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
