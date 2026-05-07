@@ -3,10 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
   BadgeAlert,
+  Copy,
   Database,
   LineChart as LineChartIcon,
   Mic,
+  RefreshCw,
   Sparkles,
+  ThumbsDown,
+  ThumbsUp,
 } from 'lucide-react'
 import {
   Bar,
@@ -1137,6 +1141,38 @@ export default function ContractAgentPage() {
                             ) : (
                               <AssistantMessage payload={msg.payload} />
                             )}
+                            {!isUser && (
+                              <div className="flex items-center gap-3 pl-1 text-[#94A3B8]">
+                                <button
+                                  type="button"
+                                  aria-label="Copy response"
+                                  className="transition-colors hover:text-[#0E7490]"
+                                >
+                                  <Copy className="h-[15px] w-[15px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Like response"
+                                  className="transition-colors hover:text-[#0E7490]"
+                                >
+                                  <ThumbsUp className="h-[15px] w-[15px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Dislike response"
+                                  className="transition-colors hover:text-[#0E7490]"
+                                >
+                                  <ThumbsDown className="h-[15px] w-[15px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Refresh response"
+                                  className="transition-colors hover:text-[#0E7490]"
+                                >
+                                  <RefreshCw className="h-[15px] w-[15px]" />
+                                </button>
+                              </div>
+                            )}
                             <span
                               className={[
                                 'text-[11px] text-[#94A3B8]',
@@ -1216,7 +1252,7 @@ export default function ContractAgentPage() {
                   value={input}
                   onChange={handleInput}
                   onKeyDown={handleKeyDown}
-              placeholder='Ask about agreements, ownership, implemented markets, solutions, or travel volume…'
+              placeholder='Ask anything'
                   rows={1}
                   className='h-[40px] min-h-[40px] flex-1 resize-none bg-transparent px-1 py-[0.5rem] text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none disabled:opacity-60'
                   disabled={isLoading}
@@ -1378,20 +1414,22 @@ function AssistantCard({ payload }: { payload: ChatReplyPayload }) {
   const items = payload.headers ?? []
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {items.map((item) => (
-        <div
-          key={`${item.key}-${item.value}`}
-          className="rounded-[20px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-4 py-3"
-        >
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94A3B8]">
-            {item.key}
+    <div className="overflow-hidden rounded-[22px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)]">
+      <div className="divide-y divide-[#E9EEF5]">
+        {items.map((item) => (
+          <div
+            key={`${item.key}-${item.value}`}
+            className="grid gap-1 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-start sm:gap-4"
+          >
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94A3B8]">
+              {item.key}
+            </div>
+            <div className="text-sm leading-6 text-[#0F172A] break-words">
+              {item.value}
+            </div>
           </div>
-          <div className="mt-1 text-sm leading-6 text-[#0F172A]">
-            {item.value}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
