@@ -118,6 +118,38 @@ type DisplayChart = InsightChartItem & {
   normalizedData: ChartPoint[]
 }
 
+type SpeechRecognitionAlternative = {
+  transcript: string
+}
+
+type SpeechRecognitionResultLike = {
+  isFinal: boolean
+  0: SpeechRecognitionAlternative
+}
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number
+  results: SpeechRecognitionResultLike[]
+}
+
+type SpeechRecognitionErrorEventLike = {
+  error: string
+}
+
+type BrowserSpeechRecognition = {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start: () => void
+  stop: () => void
+  abort: () => void
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  onend: (() => void) | null
+}
+
+type BrowserSpeechRecognitionCtor = new () => BrowserSpeechRecognition
+
 const CHART_COLORS = [
   '#0F766E',
   '#0891B2',
@@ -924,8 +956,16 @@ export default function ContractAgentPage() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0)
+  const [isSpeechModalOpen, setIsSpeechModalOpen] = useState(false)
+  const [speechStatus, setSpeechStatus] = useState<
+    'idle' | 'listening' | 'processing' | 'error'
+  >('idle')
+  const [speechTranscript, setSpeechTranscript] = useState('')
+  const [speechError, setSpeechError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null)
+  const finalTranscriptRef = useRef('')
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -941,6 +981,13 @@ export default function ContractAgentPage() {
     }, 2200)
     return () => window.clearInterval(timer)
   }, [isLoading])
+
+  useEffect(() => {
+    return () => {
+      speechRecognitionRef.current?.abort()
+      speechRecognitionRef.current = null
+    }
+  }, [])
 
   const sendMessage = async () => {
     const text = input.trim()
@@ -1016,6 +1063,112 @@ export default function ContractAgentPage() {
         )}px`
       }
     })
+  }
+
+  const closeSpeechModal = () => {
+    speechRecognitionRef.current?.abort()
+    speechRecognitionRef.current = null
+    setIsSpeechModalOpen(false)
+    setSpeechStatus('idle')
+    setSpeechTranscript('')
+    setSpeechError('')
+  }
+
+  const startSpeechRecognition = () => {
+    const ctor = (
+      window as Window & {
+        SpeechRecognition?: BrowserSpeechRecognitionCtor
+        webkitSpeechRecognition?: BrowserSpeechRecognitionCtor
+      }
+    ).SpeechRecognition ??
+      (
+        window as Window & {
+          webkitSpeechRecognition?: BrowserSpeechRecognitionCtor
+        }
+      ).webkitSpeechRecognition
+
+    setIsSpeechModalOpen(true)
+    finalTranscriptRef.current = ''
+    setSpeechTranscript('')
+    setSpeechError('')
+
+    if (!ctor) {
+      setSpeechStatus('error')
+      setSpeechError('Speech recognition is not supported in this browser.')
+      return
+    }
+
+    const recognition = new ctor()
+    speechRecognitionRef.current = recognition
+    recognition.lang = 'en-US'
+    recognition.continuous = true
+    recognition.interimResults = true
+
+    recognition.onresult = (event) => {
+      let finalChunk = ''
+      let interimTranscript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const result = event.results[i]
+        const piece = result[0]?.transcript ?? ''
+        if (result.isFinal) {
+          finalChunk += piece
+        } else {
+          interimTranscript += piece
+        }
+      }
+
+      if (finalChunk) {
+        finalTranscriptRef.current += finalChunk
+      }
+
+      setSpeechTranscript(`${finalTranscriptRef.current}${interimTranscript}`)
+    }
+
+    recognition.onerror = (event) => {
+      setSpeechStatus('error')
+      setSpeechError(`Speech recognition error: ${event.error}`)
+    }
+
+    recognition.onend = () => {
+      setSpeechStatus((prev) => (prev === 'error' ? 'error' : 'idle'))
+    }
+
+    try {
+      setSpeechStatus('listening')
+      recognition.start()
+    } catch {
+      setSpeechStatus('error')
+      setSpeechError('Unable to start speech recognition. Please try again.')
+    }
+  }
+
+  const stopSpeechRecognition = () => {
+    if (!speechRecognitionRef.current) return
+    setSpeechStatus('processing')
+    speechRecognitionRef.current.stop()
+  }
+
+  const applySpeechTranscript = () => {
+    const transcript = speechTranscript.trim()
+    if (!transcript) return
+
+    setInput((prev) => {
+      const nextValue = prev.trim() ? `${prev.trim()} ${transcript}` : transcript
+      window.requestAnimationFrame(() => {
+        textareaRef.current?.focus()
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'
+          textareaRef.current.style.height = `${Math.min(
+            textareaRef.current.scrollHeight,
+            120
+          )}px`
+        }
+      })
+      return nextValue
+    })
+
+    closeSpeechModal()
   }
 
   return (
@@ -1243,6 +1396,7 @@ export default function ContractAgentPage() {
                 <button
                   type="button"
                   aria-label="Use microphone"
+                  onClick={startSpeechRecognition}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] text-[#64748B] transition-colors hover:bg-[#F0F9FF] hover:text-[#0E7490]"
                 >
                   <Mic className="h-4 w-4" />
@@ -1275,6 +1429,66 @@ export default function ContractAgentPage() {
           </div>
         </div>
       )}
+
+      {isSpeechModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Speech to text"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-[#0F172A]">
+                Speak now
+              </h3>
+              <p className="text-sm text-[#64748B]">
+                {speechStatus === 'listening'
+                  ? 'Listening... click stop when done.'
+                  : speechStatus === 'processing'
+                    ? 'Processing your speech...'
+                    : 'Your speech will be converted into text.'}
+              </p>
+            </div>
+
+            <div className="mt-4 min-h-28 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-sm text-[#0F172A]">
+              {speechTranscript.trim() || 'Speech text will appear here.'}
+            </div>
+
+            {speechError ? (
+              <p className="mt-3 text-sm text-[#B91C1C]">{speechError}</p>
+            ) : null}
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeSpeechModal}
+                className="rounded-lg border border-[#CBD5E1] px-3 py-1.5 text-sm text-[#334155]"
+              >
+                Close
+              </button>
+              {speechStatus === 'listening' ? (
+                <button
+                  type="button"
+                  onClick={stopSpeechRecognition}
+                  className="rounded-lg bg-[#0F766E] px-3 py-1.5 text-sm text-white"
+                >
+                  Stop
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={applySpeechTranscript}
+                  disabled={!speechTranscript.trim()}
+                  className="rounded-lg bg-[#0891B2] px-3 py-1.5 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Use text
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {activeTab === 'insights' && (
         <div
