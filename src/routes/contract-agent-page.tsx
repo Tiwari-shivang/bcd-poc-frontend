@@ -740,6 +740,10 @@ function ChartRenderer({ chart }: { chart: DisplayChart }) {
             innerRadius={62}
             outerRadius={100}
             paddingAngle={2}
+            labelLine={false}
+            label={({ name }) =>
+              formatAxisValue(normalizeChartValue(name ?? ''))
+            }
           >
             {chart.normalizedData.map((_, index) => (
               <Cell
