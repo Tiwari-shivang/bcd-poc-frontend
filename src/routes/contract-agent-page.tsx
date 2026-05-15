@@ -215,6 +215,24 @@ function formatCellValue(value: unknown): string {
   return text
 }
 
+function formatNumericDisplayValue(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return new Intl.NumberFormat('en-US').format(value)
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed === '') return value
+
+    const normalized = trimmed.replace(/,/g, '')
+    if (!Number.isNaN(Number(normalized)) && Number.isFinite(Number(normalized))) {
+      return new Intl.NumberFormat('en-US').format(Number(normalized))
+    }
+  }
+
+  return String(value ?? '')
+}
+
 function getParagraphContent(payload: ChatReplyPayload): string {
   if (typeof payload.paragraph === 'string' && payload.paragraph.trim() !== '') {
     return payload.paragraph
@@ -1643,7 +1661,7 @@ function AssistantCard({ payload }: { payload: ChatReplyPayload }) {
               {item.key}
             </div>
             <div className="text-sm leading-6 text-[#0F172A] break-words">
-              {item.value}
+              {formatNumericDisplayValue(item.value)}
             </div>
           </div>
         ))}
@@ -1679,7 +1697,7 @@ function AssistantTable({ payload }: { payload: ChatReplyPayload }) {
                   key={`cell-${rowIndex}-${cellIndex}`}
                   className="px-4 py-3 text-sm text-[#1E293B]"
                 >
-                  {cell}
+                  {formatNumericDisplayValue(cell)}
                 </TableCell>
               ))}
             </TableRow>
