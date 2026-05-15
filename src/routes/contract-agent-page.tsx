@@ -35,7 +35,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -476,38 +475,7 @@ function InsightsExperience() {
 function InsightsLoadingState() {
   return (
     <div className="px-4 py-4 sm:px-5 lg:px-6">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <div className="rounded-[28px] border border-[#E2E8F0] bg-white/90 p-6 shadow-sm lg:p-8">
-          <Skeleton className="mb-4 h-6 w-44" />
-          <Skeleton className="mb-3 h-10 w-full max-w-2xl" />
-          <Skeleton className="h-5 w-full max-w-xl" />
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-28 rounded-3xl" />
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, columnIndex) => (
-            <div
-              key={columnIndex}
-              className="rounded-[28px] border border-[#E2E8F0] bg-white/90 p-5 shadow-sm"
-            >
-              <Skeleton className="mb-3 h-7 w-48" />
-              <Skeleton className="mb-5 h-5 w-64" />
-              <div className="grid gap-4">
-                {Array.from({ length: 2 }).map((__, cardIndex) => (
-                  <Skeleton
-                    key={cardIndex}
-                    className="h-72 rounded-[24px]"
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SectionLoadingState text="Generating smart AI insights" />
     </div>
   )
 }
@@ -613,33 +581,24 @@ function ChartsExperience() {
 function ChartsLoadingState() {
   return (
     <div className="px-4 py-4 sm:px-5 lg:px-6">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <div className="rounded-[28px] border border-[#E2E8F0] bg-white/90 p-6 shadow-sm lg:p-8">
-          <Skeleton className="mb-4 h-6 w-44" />
-          <Skeleton className="mb-3 h-10 w-full max-w-2xl" />
-          <Skeleton className="h-5 w-full max-w-xl" />
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-28 rounded-3xl" />
-            ))}
-          </div>
-        </div>
+      <SectionLoadingState text="Generating smart AI graphs" />
+    </div>
+  )
+}
 
-        <div className="grid gap-5 xl:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, columnIndex) => (
-            <div
-              key={columnIndex}
-              className="rounded-[28px] border border-[#E2E8F0] bg-white/90 p-5 shadow-sm"
-            >
-              <Skeleton className="mb-3 h-7 w-48" />
-              <Skeleton className="mb-5 h-5 w-64" />
-              <div className="grid gap-4">
-                {Array.from({ length: 2 }).map((__, cardIndex) => (
-                  <Skeleton key={cardIndex} className="h-80 rounded-[24px]" />
-                ))}
-              </div>
-            </div>
-          ))}
+function SectionLoadingState({ text }: { text: string }) {
+  return (
+    <div className="mx-auto flex min-h-[320px] w-full max-w-7xl items-center justify-center rounded-[28px] border border-[#E2E8F0] bg-white/92 p-8 shadow-sm">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="relative h-12 w-12">
+          <span className="absolute inset-0 rounded-full border-4 border-[#CFFAFE]" />
+          <span className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#0891B2] border-r-[#0F766E]" />
+        </div>
+        <p className="text-sm font-medium text-[#0F172A] sm:text-base">{text}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#0891B2] [animation-delay:0ms]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#0891B2] [animation-delay:120ms]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#0891B2] [animation-delay:240ms]" />
         </div>
       </div>
     </div>
