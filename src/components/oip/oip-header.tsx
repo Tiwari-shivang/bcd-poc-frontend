@@ -26,16 +26,11 @@ export function OipHeader({
         </Button>
 
         <div className="flex min-w-0 items-center gap-3">
-          {/* BCD logomark */}
-          <div
-            className="flex h-9 min-w-[56px] items-center justify-center rounded-lg px-2"
-            style={{ backgroundColor: '#1B2A47', border: '1px solid rgba(255,255,255,0.15)' }}
-            aria-label="BCD Travel"
-          >
-            <span className="text-[15px] font-black tracking-widest text-white select-none">
-              BCD
-            </span>
-          </div>
+          <img
+            src="/bcd-travel_logo.png"
+            alt="BCD Travel"
+            className="h-8 w-auto rounded-lg border border-white/15 bg-[#fff] px-2 py-1"
+          />
           <div className="min-w-0">
             <div className="truncate text-[13px] font-semibold leading-tight text-white/90">
               Operational Intelligence Platform
